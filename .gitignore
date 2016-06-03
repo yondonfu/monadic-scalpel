@@ -1,0 +1,9 @@
+# Virtualenv
+venv
+
+# Python
+*.pyc
+
+# Files
+proxies.txt
+ua.txt
