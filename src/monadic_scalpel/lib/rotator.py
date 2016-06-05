@@ -14,6 +14,6 @@ def read_file(filename):
     with open(filename, 'rb') as f:
         for line in f.readlines():
             if line:
-                data += line.strip()
+                data.append(line.strip())
 
     return data

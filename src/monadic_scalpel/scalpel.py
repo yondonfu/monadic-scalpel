@@ -1,60 +1,61 @@
 import requests
 from pymonad.Reader import curry
+from pymonad.Maybe import Just, Nothing
 from lib.rotator import make_rotator, read_file
 from lib.timeout import timeout
 
-MAX_RETRIES = 3
+MAX_RETRIES = 3 # Max number of request retries
+TIMEOUT = 10 # Request timeout value
 
-def make_scalpel(method, parse_func, proxy_file, ua_file):
+def scalp(url, requester, parse_func, requester_params=None):
+    retries = 0
+
+    while retries < MAX_RETRIES:
+        print "Trying"
+        res = requester(url, requester_params)
+
+        if res != Nothing:
+            return parse_func(res.getValue())
+
+        retries += 1
+
+    return Nothing
+
+def make_getter(proxy_file, ua_file):
     proxies = make_rotator(read_file(proxy_file))
     ua = make_rotator(read_file(ua_file))
 
-    # Compose parse and data functions
-    # Data function applied first, then result is passed to parse function
-    if method == "GET":
-        scalpel = parse_func * get_data
-    else:
-        scalpel = parse_func * post_data
+    def get(url, params=None):
+        proxy = {"http": "http://hiro0:snowcrash@" + proxies.next()}
+        headers = {"User-Agent": ua.next()}
 
-    # Return partially applied scalpel function with
-    # proxy and ua rotators
-    return scalpel(proxies, ua)
+        try:
+            r = requests.get(url, proxies=proxy, headers=headers, params=params, timeout=TIMEOUT)
+        except: # Catch all exceptions and return Nothing
+            # Can log type of exception here
+            return Nothing
+        else:
+            return Just(r.text)
+            
+    return get
 
-@curry
-def get_data(proxies, ua, url, params=None, retries=0):
-    @timeout
-    def get(proxy, agent, url, params=None):
-        proxy = {"http": "http://" + proxy}
-        headers = {"User-Agent": agent}
+def make_poster(proxy_fiile, ua_file):
+    proxies = make_rotator(read_file(proxy_file))
+    ua = make_rotator(read_file(ua_file))
 
-        r = requests.get(url, proxies=proxy, headers=headers)
+    def post(url, params=None):
+        proxy = {"http": "http://hiro0:snowcrash@" + proxies.next()}
+        headers = {"User-Agent": ua.next()}
 
-        return r.text
+        try:
+            r = requests.post(url, proxies=proxy, headers=headers, data=params)
+        except: # Catch all exceptions and return Nothing
+            # Can log type of exception here
+            return Nothing
+        else:
+            return Just(r.text)
 
-    if retries > MAX_RETRIES:
-        return Nothing
-
-    res = get(proxies.next(), ua.next(), url, params)
-
-    return res if res != Nothing else get_data(proxies, ua, url, params, retries + 1)
-    
-@curry
-def post_data(proxies, ua, url, params=None, retries=0):
-    @timeout
-    def post(proxy, agent, url, params=None):
-        proxy = {"http": "http://" + proxy}
-        headers = {"User-Agent": agent}
-
-        r = requests.post(url, proxies=proxy, headers=headers)
-
-        return r.text
-
-    if retries > MAX_RETRIES:
-        return Nothing
-
-    res = post(proxies.next(), ua.next(), url, params)
-
-    return res if res != Nothing else post_data(proxies, ua, url, params, retries + 1)
+    return post
 
 
 
