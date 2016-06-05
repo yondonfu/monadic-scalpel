@@ -5,8 +5,11 @@ import lxml
 
 @curry
 def m_find(tag, tag_cls, tag_id, soup):
+    """
+    Wraps the BeautifulSoup find function to use Just and Nothing
+    """
     if soup is None:
-        return Nothing
+        return Nothing # Failed parse, propagate Nothing
 
     if tag_cls:
         return Just(soup.find(tag, {"class": tag_cls}))
@@ -17,8 +20,11 @@ def m_find(tag, tag_cls, tag_id, soup):
 
 @curry
 def m_find_all(tag, tag_cls, tag_id, soup):
+    """
+    Wraps the BeautifulSoup find_all function to use Just and Nothing
+    """
     if soup is None:
-        return Nothing
+        return Nothing # Failed parse, propagate Nothing
 
     if tag_cls:
         return Just(soup.find_all(tag, {"class": tag_cls}))
@@ -29,8 +35,11 @@ def m_find_all(tag, tag_cls, tag_id, soup):
 
 @curry
 def m_lst_get(idx, soup):
+    """
+    Wraps indexing operation for BeautifulSoup ResultSet to use Just and Nothing
+    """
     if soup is None:
-        return Nothing
+        return Nothing # Failed parse, propagate Nothing
 
     if type(soup) is not ResultSet or len(soup) <= idx:
         return Nothing
@@ -39,8 +48,11 @@ def m_lst_get(idx, soup):
 
 @curry
 def m_dict_get(key, soup):
+    """
+    Wraps getting value by key operation for BeautifulSoup Tag to use Just and Nothing
+    """
     if soup is None:
-        return Nothing
+        return Nothing # Failed parse, propagate Nothing
 
     if type(soup) is not Tag:
         return Nothing
