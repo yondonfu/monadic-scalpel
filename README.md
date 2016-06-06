@@ -25,6 +25,8 @@ The requester functions created by `make_getter` and `make_poster` accept a file
 
 Note: If a proxy has a username and password each line of the proxy file should be in the format username:password@proxyip. For the user agent file each line should be the user agent string (not enclosed in quotes).
 
+There are open web proxy lists available online such as [InCloak](https://incloak.com/proxy-list/) or [HMA](https://www.hidemyass.com/proxy). These resources can be an initial resource but for more secure and faster proxies you can buy them online from a service.
+
 You also need to write your own parse function. You should write your parse function with the monadic parser functions (`m_find`, `m_find_all`, `m_lst_get` and `m_dict_get`) and PyMonad's monadic operator >> which allows you to create a data pipeline in your parse function.
 
 ```python
@@ -48,4 +50,26 @@ from monadic_scalpel.scalpel import scalp
 
 scalp("http://streeteasy.com/for-sale/nyc", getter, parse_html)
 ```
+
+Example of a scraper written with monadic scalpel:
+
+```python
+from monadic_scalpel.scalpel import make_getter, scalp
+from monadic_scalpel.parser import m_find, m_find_all, m_lst_get, m_dict_get
+from pymonad.Maybe import Just
+from bs4 import BeautifulSoup
+import lxml
+
+def parse_html(html):
+    soup = BeautifulSoup(html, "lxml")
+
+    return Just(soup) >> m_find("div", "in_this_building big_separator", None) >> m_find_all("div", "details_info", None) >> \
+        m_lst_get(0) >> m_find("a", None, None) >> m_dict_get("href")
+
+if __name__ == "__main__":
+    getter = make_getter("proxies.txt", "ua.txt")
+
+    print scalp("http://streeteasy.com/building/203-west-137-street-manhattan/1?featured=1", getter, parse_html)
+```
+
 
