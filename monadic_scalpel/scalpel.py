@@ -1,7 +1,7 @@
 import requests
 from pymonad.Reader import curry
 from pymonad.Maybe import Just, Nothing
-from lib.rotator import make_rotator, read_file
+from rotator import make_rotator, read_file
 
 MAX_RETRIES = 3 # Max number of request retries
 TIMEOUT = 10 # Request timeout value

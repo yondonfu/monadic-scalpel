@@ -4,6 +4,10 @@ venv
 # Python
 *.pyc
 
+build
+dist
+*.egg-info
+
 # Files
 proxies.txt
 ua.txt
